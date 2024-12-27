@@ -7,7 +7,7 @@ datename=$(date +%Y%m%d%H%M%S)
 # datename=nq_test
 MODEL_PATH=$1
 OUTPUT_DIR=$2
-PREFIX=$3
+PREFIX=${3:-''}
 SAVE_ENCODED_CORPUS_PATH=$4
 Q_MLEN=${Q_MLEN:-32}
 P_MLEN=${P_MLEN:-256}
@@ -64,7 +64,8 @@ python annotate.py \
 
 python evaluate_dpr_retrieval.py \
   --retrieval $ENCODE_TEMP_PATH/test.jsonl \
-  --save $OUTPUT_DIR/${PREFIX}result.json
+  --save $OUTPUT_DIR \
+  --prefix $PREFIX
 
 # mv $ENCODE_TEMP_PATH/test.jsonl $OUTPUT_DIR/${PREFIX}test.jsonl
 

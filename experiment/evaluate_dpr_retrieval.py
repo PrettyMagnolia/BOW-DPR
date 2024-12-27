@@ -18,6 +18,7 @@
 Most of the tokenization code here is copied from Facebook/DPR & DrQA codebase to avoid adding an extra dependency
 """
 
+import os
 import argparse
 import copy
 import json
@@ -79,22 +80,26 @@ def evaluate_retrieval(
         answers = item['answers']
         contexts = item['contexts']
         has_ans_idx = max_k  # first index in contexts that has answers
-
+        all_hits = []
         for idx, ctx in enumerate(contexts):
+            ctx['rank'] = idx + 1
+
             if idx >= max_k:
                 break
             if 'has_answer' in ctx:
                 if ctx['has_answer']:
-                    has_ans_idx = idx
-                    break
+                    all_hits.append(ctx['rank'])
             else:
                 # text = ctx['text'].split('\n')[1]  # [0] is title, [1] is text
                 text = ctx['text']
                 if has_answers(text, answers, tokenizer, regex):
-                    has_ans_idx = idx
-                    break
+                    all_hits.append(ctx['rank'])
         
-        hits[has_ans_idx:] = [v + 1 for v in hits[has_ans_idx:]]
+        item['all_hits'] = all_hits
+        if len(all_hits) > 0:
+            item['hit_min_rank'] = min(all_hits)
+            has_ans_idx = min(all_hits) - 1
+            hits[has_ans_idx:] = [v + 1 for v in hits[has_ans_idx:]]
 
         for k in topk:
             accuracy[k].append(0 if has_ans_idx >= k else 1)
@@ -105,7 +110,7 @@ def evaluate_retrieval(
     for k in topk:
         print(f'Top{k}\taccuracy: {accuracy[k]:.4f}')
     
-    return accuracy, hits
+    return accuracy, hits, retrieval
 
 
 if __name__ == '__main__':
@@ -116,15 +121,20 @@ if __name__ == '__main__':
     parser.add_argument('--regex', action='store_true', default=False, help="regex match")
     parser.add_argument('--save', type=str, default=None,
                         help="Path to output score files.")
+    parser.add_argument('--prefix', type=str, default='',
+                        help="Prefix for the output files.")
     args = parser.parse_args()
 
-    accuracy, hits = evaluate_retrieval(args.retrieval, args.topk, args.regex)
+    accuracy, hits, retrieval = evaluate_retrieval(args.retrieval, args.topk, args.regex)
 
     if args.save is not None:
         Path(args.save).parent.mkdir(parents=True, exist_ok=True)
-        with open(args.save, 'w') as f:
+        with open(os.path.join(args.save, f"{args.prefix}result_topk.json"), 'w') as f:
             json.dump({"recall": accuracy}, f)
 
-        with open(args.save.replace('.json', '_hits.csv'), 'w') as f:
+        with open(os.path.join(args.save, f"{args.prefix}result_hits.csv"), 'w') as f:
             for k, hit in enumerate(hits):
                 f.write(f'{k+1},{hit}\n')
+
+        with open(os.path.join(args.save, f"{args.prefix}result.json"), 'w') as f:
+            json.dump(retrieval, f)
