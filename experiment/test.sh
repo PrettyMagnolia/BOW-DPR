@@ -64,8 +64,7 @@ python annotate.py \
 
 python evaluate_dpr_retrieval.py \
   --retrieval $ENCODE_TEMP_PATH/test.jsonl \
-  --save $OUTPUT_DIR \
-  --prefix $PREFIX
+  --save $OUTPUT_DIR/${PREFIX}result.jsonl
 
 # mv $ENCODE_TEMP_PATH/test.jsonl $OUTPUT_DIR/${PREFIX}test.jsonl
 

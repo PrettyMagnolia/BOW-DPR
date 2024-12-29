@@ -109,6 +109,9 @@ def evaluate_retrieval(
 
     for k in topk:
         print(f'Top{k}\taccuracy: {accuracy[k]:.4f}')
+
+    for idx, h in enumerate(hits):
+        hits[idx] = h / len(retrieval)
     
     return accuracy, hits, retrieval
 
@@ -121,20 +124,21 @@ if __name__ == '__main__':
     parser.add_argument('--regex', action='store_true', default=False, help="regex match")
     parser.add_argument('--save', type=str, default=None,
                         help="Path to output score files.")
-    parser.add_argument('--prefix', type=str, default='',
-                        help="Prefix for the output files.")
     args = parser.parse_args()
 
     accuracy, hits, retrieval = evaluate_retrieval(args.retrieval, args.topk, args.regex)
 
     if args.save is not None:
         Path(args.save).parent.mkdir(parents=True, exist_ok=True)
-        with open(os.path.join(args.save, f"{args.prefix}result_topk.json"), 'w') as f:
-            json.dump({"recall": accuracy}, f)
+        # with open(os.path.join(args.save, f"{args.prefix}result_topk.json"), 'w') as f:
+        #     json.dump({"recall": accuracy}, f)
 
-        with open(os.path.join(args.save, f"{args.prefix}result_hits.csv"), 'w') as f:
+        with open(args.save.replace('.jsonl', '_hit@k.csv'), 'w') as f:
             for k, hit in enumerate(hits):
                 f.write(f'{k+1},{hit}\n')
+        print(f"Hit@k saved to {args.save.replace('.jsonl', '_hit@k.csv')}")
 
-        with open(os.path.join(args.save, f"{args.prefix}result.json"), 'w') as f:
-            json.dump(retrieval, f)
+        with open(args.save, 'w') as f:
+           for item in retrieval:
+                f.write(json.dumps(item) + '\n')
+        print(f"Retrieval results saved to {args.save}")
