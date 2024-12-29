@@ -701,4 +701,4 @@ python evaluate_dpr_retrieval.py \
 
 ![](static/YxRCbv58Uoa5tpxqq9ScPHILnIc.png)
 
-从表格和图中的数据可以看出，**BOW-DPR 在几乎所有 k 值下的 hit@kmailto:hit@k 值均高于其他两个基准模型**。在** hit@1mailto:hit@1 上，BOW-DPR 达到了 0.5**，分别比 DPR 和 TASER 高出 0.04 和 0.07，表明了 BOW-DPR 在检索任务中的有效性。
+从表格和图中的数据可以看出，**BOW-DPR 在几乎所有 k 值下的 hit@k 值均高于其他两个基准模型**。在 **hit@1 上，BOW-DPR 达到了 0.5**，分别比 DPR 和 TASER 高出 0.04 和 0.07，表明了 BOW-DPR 在检索任务中的有效性。
