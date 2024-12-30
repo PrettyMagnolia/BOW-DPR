@@ -1,4 +1,4 @@
-# IR 大作业 实验报告
+# 现代信息检索 大作业 实验报告
 
 ## 实验步骤
 
@@ -71,13 +71,13 @@ git clone https://github.com/PrettyMagnolia/BOW-DPR.git
 #### 一键式命令
 
 ```bash
-# 创建并激活虚拟环境
-conda create -n bowdpr python=3.9.12
+# 安装依赖 切换到主项目路径(实验代码目录)
+cd /path/to/BOW-DPR
+# 使用 env.yaml 文件创建新的 Conda 环境
+conda env create -f env.yaml
 conda activate bowdpr
-
-# 安装依赖
-cd /path/to/BOW-DPR # 主项目路径
-pip install -e .
+# 将当前目录的 src 文件夹添加到 PYTHONPATH 中
+export PYTHONPATH=$(pwd)/src
 ```
 
 <u>注：如果 cuda 版本和实验中所使用的版本不匹配，可能需要额外调整其他依赖的版本。</u>
@@ -258,6 +258,8 @@ bash train.sh bowdpr_wiki
 
 运行命令后，主目录下会生成 results/bowdpr_{datetime} 文件夹，存放此次训练过程中的输出和日志文件。
 
+(在本实验的环境和默认的超参数下，模型训练的完整过程需要约 220 min，其中阶段 1 训练约 90 min，阶段 2 训练约 120 min，两阶段的测试过程均需要 3 min 左右。）
+
 #### 详细描述
 
 train.sh 脚本涵盖了整个模型训练过程，但由于训练过程包含多个子步骤，以下将根据 train.sh 脚本的内容对训练过程进行详细介绍。
@@ -335,6 +337,10 @@ if [ ! -f $OUTPUT_DIR/retriever_model_s1/pytorch_model.bin ]; then
     |& tee $LOG_DIR/webq_ft_s1.log
 fi
 ```
+
+阶段 1 训练过程的 Loss 曲线如下：
+
+![](static/CkFxbzhwkoRs12xNyLJcEHvknrd.png)
 
 ##### 阶段 1 测试
 
@@ -414,7 +420,7 @@ cp $DATA_DIR/webq-train.jsonl $OUTPUT_DIR/train_hn
 
 ##### 阶段 2 训练
 
-此步骤使用阶段 1 挖掘的困难负样本进行阶段 2 的训练，进一步提升模型性能。
+此步骤使用阶段 1 挖掘的困难负样本结合原始训练集重新对模型进行阶段 2 的训练，进一步提升模型性能。
 
 ```bash
 ##########################
@@ -434,6 +440,10 @@ if [ ! -f $OUTPUT_DIR/retriever_model_s2/pytorch_model.bin ]; then
     |& tee $LOG_DIR/webq_ft_s2.log
 fi
 ```
+
+阶段 2 训练过程的 Loss 曲线如下：
+
+![](static/NzLfbClMPoI6YFx2qDWc0ZwNnhd.png)
 
 ##### 阶段 2 测试
 
@@ -512,7 +522,7 @@ bash test.sh ../BOW-DPR-ft-webq ../results/test
 
 运行命令后，主目录会生成 BOW-DPR-ft-webq 文件夹，存放在 WebQ 数据集上微调后的模型，之后主目录会生成 results/test 文件夹，存放测试的结果。
 
-<u>注：提交文件中，已经包含我们在 WebQ 数据集上微调后的模型，故</u>** git clone 步骤可省略**<u>，直接调用 test.sh 文件进行测试。</u>
+<u>注：提交文件中，已经包含我们在 WebQ 数据集上微调后的模型，故 git clone 步骤可省略，直接调用 test.sh 文件进行测试。</u>
 
 #### 详细描述
 
@@ -691,14 +701,14 @@ python evaluate_dpr_retrieval.py \
 
 (其中 TASER 为微软的论文《Task-Aware Specialization for Efficient and Robust Dense Retrieval for Open-Domain Question Answering》中提出的检索模型)
 
-| <br/>               | Top 1<br/>   | Top 3<br/>    | Top 5<br/>     | Top 10<br/>    | Top 20<br/>   | Top 50<br/>   | Top 100<br/>   |
-| ------------------- | ------------ | ------------- | -------------- | -------------- | ------------- | ------------- | -------------- |
-| DPR<br/>            | 0.46<br/>    | 0.575<br/>    | 0.62<br/>      | 0.69<br/>      | 0.735<br/>    | 0.775<br/>    | 0.81<br/>      |
-| TASER<br/>          | 0.43<br/>    | 0.555<br/>    | 0.6<br/>       | **0.745**<br/> | 0.76<br/>     | 0.825<br/>    | 0.84<br/>      |
-| BOW-DPR (Ours)<br/> | **0.5**<br/> | **0.63**<br/> | **0.665**<br/> | 0.73<br/>      | **0.79**<br/> | **0.84**<br/> | **0.855**<br/> |
+| <br/>               | Top 1<br/>    | Top 3<br/>    | Top 5<br/>    | Top 10<br/>    | Top 20<br/>   | Top 50<br/>    | Top 100<br/>   |
+| ------------------- | ------------- | ------------- | ------------- | -------------- | ------------- | -------------- | -------------- |
+| DPR<br/>            | 0.46<br/>     | 0.575<br/>    | 0.62<br/>     | 0.69<br/>      | 0.735<br/>    | 0.775<br/>     | 0.81<br/>      |
+| TASER<br/>          | 0.43<br/>     | 0.555<br/>    | 0.6<br/>      | **0.745**<br/> | **0.76**<br/> | **0.825**<br/> | 0.84<br/>      |
+| BOW-DPR (Ours)<br/> | **0.57**<br/> | **0.66**<br/> | **0.68**<br/> | 0.74<br/>      | **0.76**<br/> | **0.825**<br/> | **0.865**<br/> |
 
 在 k 为 [1, 100] 下，三个模型完整的命中率曲线如下：
 
-![](static/YxRCbv58Uoa5tpxqq9ScPHILnIc.png)
+![](static/MBecbNSuQo51WQxOsuNcAEDlnmg.png)
 
-从表格和图中的数据可以看出，**BOW-DPR 在几乎所有 k 值下的 hit@k 值均高于其他两个基准模型**。在 **hit@1 上，BOW-DPR 达到了 0.5**，分别比 DPR 和 TASER 高出 0.04 和 0.07，表明了 BOW-DPR 在检索任务中的有效性。
+从表格和图中的数据可以看出，**BOW-DPR 在几乎所有 k 值下的 hit@k 值均高于其他两个基准模型**。在 **hit@1 上，BOW-DPR 达到了 0.57**，分别比 DPR 和 TASER 高出 0.11 和 0.14，表明了 BOW-DPR 在检索任务中的有效性。
